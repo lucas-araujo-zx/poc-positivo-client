@@ -42,7 +42,7 @@ export function Login({ error, loading, onSubmit }) {
             <span>Treine com a MIA</span>
           </h1>
           <p>
-            A assistente de treinamento da Positivo.
+            Base de conhecimento do Notebook Positivo C14 e do VAIO FE16
           </p>
         </div>
         <div className="login-shell">
