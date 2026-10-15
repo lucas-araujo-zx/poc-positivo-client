@@ -10,7 +10,7 @@ function roleOf(message) {
   return message?.source === 'user' || message?.role === 'user' ? 'user' : 'agent'
 }
 
-export function Talk({ token, onSignOut }) {
+export function Talk({ token, name, onSignOut }) {
   const [mode, setMode] = useState('voice')
   const [status, setStatus] = useState('idle')
   const [agentMode, setAgentMode] = useState('listening')
@@ -68,6 +68,7 @@ export function Talk({ token, onSignOut }) {
         signedUrl: session.signedUrl,
         connectionType: 'websocket',
         textOnly: nextMode === 'text',
+        dynamicVariables: { user_name: name },
         onConnect: () => setStatus('connected'),
         onDisconnect: () => {
           sessionRef.current = null
@@ -124,7 +125,10 @@ export function Talk({ token, onSignOut }) {
   return (
     <div className={`talk ${mode}`}>
       <header className="talk-top">
-        <img src={LOGO} alt="Positivo" />
+        <div className="talk-brand">
+          <img src={LOGO} alt="Positivo" />
+          <p className="talk-user">{name}</p>
+        </div>
         <div className="talk-actions">
           <button type="button" className="quiet" onClick={onSignOut}>
             Sair

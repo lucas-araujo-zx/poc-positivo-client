@@ -3,14 +3,21 @@ import test from 'node:test'
 import { dispatchApi } from './plugin.js'
 
 const env = {
-  loginToken: 'segredo-local',
+  users: JSON.stringify([
+    { name: 'Maria Silva', password: 'segredo-local' },
+    { name: 'João Costa', password: 'senha-dois' },
+  ]),
   agentId: 'agent_3001m23p224gfzgtyt41nkvwxhjn',
   apiKey: '',
 }
 
-test('login accepts the configured token', async () => {
+test('login accepts the configured token and returns the user name', async () => {
   const ok = await dispatchApi(
     { method: 'POST', pathname: '/api/login', token: '', body: { token: 'segredo-local' } },
+    env,
+  )
+  const second = await dispatchApi(
+    { method: 'POST', pathname: '/api/login', token: '', body: { token: 'senha-dois' } },
     env,
   )
   const denied = await dispatchApi(
@@ -18,31 +25,22 @@ test('login accepts the configured token', async () => {
     env,
   )
   assert.equal(ok.status, 200)
+  assert.deepEqual(ok.payload, { ok: true, name: 'Maria Silva' })
+  assert.deepEqual(second.payload, { ok: true, name: 'João Costa' })
   assert.equal(denied.status, 401)
 })
 
-test('login accepts any listed password and rejects a string that is not one of them', async () => {
-  const listed = { ...env, loginToken: 'senha-um:senha-dois' }
-  const first = await dispatchApi(
-    { method: 'POST', pathname: '/api/login', token: '', body: { token: 'senha-um' } },
-    listed,
-  )
-  const second = await dispatchApi(
-    { method: 'POST', pathname: '/api/login', token: '', body: { token: 'senha-dois' } },
-    listed,
-  )
-  const denied = await dispatchApi(
-    { method: 'POST', pathname: '/api/login', token: '', body: { token: 'senha-tres' } },
-    listed,
-  )
+test('login rejects a string that is not one of the passwords', async () => {
   const wholeList = await dispatchApi(
-    { method: 'POST', pathname: '/api/login', token: '', body: { token: 'senha-um:senha-dois' } },
-    listed,
+    { method: 'POST', pathname: '/api/login', token: '', body: { token: env.users } },
+    env,
   )
-  assert.equal(first.status, 200)
-  assert.equal(second.status, 200)
-  assert.equal(denied.status, 401)
+  const missing = await dispatchApi(
+    { method: 'POST', pathname: '/api/login', token: '', body: { token: 'senha-um' } },
+    { ...env, users: '' },
+  )
   assert.equal(wholeList.status, 401)
+  assert.equal(missing.status, 503)
 })
 
 test('signed url stays behind the login token and the ElevenLabs key', async () => {

@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       clientApiPlugin({
-        loginToken: env.POSITIVO_LOGIN_TOKEN,
+        users: env.POSITIVO_USERS,
         agentId: env.POSITIVO_AGENT_ID,
         apiKey: env.ELEVENLABS_API_KEY || process.env.ELEVENLABS_API_KEY || '',
       }),

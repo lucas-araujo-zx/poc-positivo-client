@@ -1,15 +1,33 @@
-const TOKEN_KEY = 'positivo.client.token'
+const SESSION_KEY = 'positivo.client.session'
+const LEGACY_TOKEN_KEY = 'positivo.client.token'
 
-export function readToken() {
-  return sessionStorage.getItem(TOKEN_KEY) ?? ''
+export function readSession() {
+  sessionStorage.removeItem(LEGACY_TOKEN_KEY)
+  const raw = sessionStorage.getItem(SESSION_KEY)
+  if (!raw) {
+    return null
+  }
+  try {
+    const data = JSON.parse(raw)
+    if (typeof data?.token === 'string' && data.token && typeof data?.name === 'string' && data.name) {
+      return { token: data.token, name: data.name }
+    }
+  } catch {
+    return null
+  }
+  return null
 }
 
-export function writeToken(token) {
-  sessionStorage.setItem(TOKEN_KEY, token)
+export function writeSession(session) {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+    token: session.token,
+    name: session.name,
+  }))
 }
 
-export function clearToken() {
-  sessionStorage.removeItem(TOKEN_KEY)
+export function clearSession() {
+  sessionStorage.removeItem(SESSION_KEY)
+  sessionStorage.removeItem(LEGACY_TOKEN_KEY)
 }
 
 async function request(path, { method = 'GET', token = '', body } = {}) {

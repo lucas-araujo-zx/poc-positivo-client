@@ -39,7 +39,7 @@ export default async function handler(req, res) {
         body: await jsonBody(req),
       },
       {
-        loginToken: process.env.POSITIVO_LOGIN_TOKEN ?? '',
+        users: process.env.POSITIVO_USERS ?? '',
         agentId: process.env.POSITIVO_AGENT_ID ?? '',
         apiKey: process.env.ELEVENLABS_API_KEY ?? '',
       },

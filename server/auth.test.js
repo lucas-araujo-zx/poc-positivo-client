@@ -1,22 +1,30 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { agentIdFrom, tokensMatch } from './auth.js'
+import { agentIdFrom, findUser, parseUsers } from './auth.js'
 
-test('tokensMatch accepts the same secret and rejects a different one', () => {
-  assert.equal(tokensMatch('segredo-local', 'segredo-local'), true)
-  assert.equal(tokensMatch('segredo-local', 'outro-segredo'), false)
-  assert.equal(tokensMatch('curto', 'segredo-local'), false)
+const users = [
+  { name: 'Maria Silva', password: 'senha-um' },
+  { name: 'João Costa', password: 'senha-dois' },
+]
+
+test('parseUsers reads name and password and rejects a broken list', () => {
+  assert.deepEqual(parseUsers(JSON.stringify(users)), users)
+  assert.deepEqual(parseUsers(''), [])
+  assert.equal(parseUsers('nao-json'), null)
+  assert.equal(parseUsers('{"name":"Maria"}'), null)
+  assert.equal(
+    parseUsers(JSON.stringify([{ name: 'Maria Silva', password: 'senha-um' }, { name: 'Outra', password: 'senha-um' }])),
+    null,
+  )
+  assert.equal(parseUsers(JSON.stringify([{ name: ' ', password: 'senha-um' }])), null)
 })
 
-test('tokensMatch accepts any colon-separated password and rejects the rest', () => {
-  const list = 'senha-um:senha-dois:senha-tres'
-  assert.equal(tokensMatch('senha-um', list), true)
-  assert.equal(tokensMatch('senha-dois', list), true)
-  assert.equal(tokensMatch('senha-tres', list), true)
-  assert.equal(tokensMatch('senha-quatro', list), false)
-  assert.equal(tokensMatch('senha-um:senha-dois', list), false)
-  assert.equal(tokensMatch('senha-um', ':senha-um::senha-dois:'), true)
-  assert.equal(tokensMatch('', ':senha-um:'), false)
+test('findUser returns the person for that password', () => {
+  assert.deepEqual(findUser(users, 'senha-um'), users[0])
+  assert.deepEqual(findUser(users, 'senha-dois'), users[1])
+  assert.equal(findUser(users, 'senha-tres'), null)
+  assert.equal(findUser(users, ''), null)
+  assert.equal(findUser([], 'senha-um'), null)
 })
 
 test('agentIdFrom keeps a single agent id', () => {

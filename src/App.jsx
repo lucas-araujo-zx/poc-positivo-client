@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { clearToken, login, readToken, writeToken } from './api.js'
+import { clearSession, login, readSession, writeSession } from './api.js'
 import { Login } from './Login.jsx'
 import { Talk } from './Talk.jsx'
 
 export function App() {
-  const [token, setToken] = useState(readToken)
+  const [session, setSession] = useState(readSession)
   const [loginError, setLoginError] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
 
@@ -12,9 +12,13 @@ export function App() {
     setLoginLoading(true)
     setLoginError('')
     try {
-      await login(next)
-      writeToken(next)
-      setToken(next)
+      const result = await login(next)
+      if (!result?.name) {
+        throw new Error('Não foi possível identificar o acesso.')
+      }
+      const value = { token: next, name: result.name }
+      writeSession(value)
+      setSession(value)
     } catch (error) {
       setLoginError(error.message)
     } finally {
@@ -23,13 +27,13 @@ export function App() {
   }
 
   function signOut() {
-    clearToken()
-    setToken('')
+    clearSession()
+    setSession(null)
   }
 
-  if (!token) {
+  if (!session) {
     return <Login error={loginError} loading={loginLoading} onSubmit={handleLogin} />
   }
 
-  return <Talk token={token} onSignOut={signOut} />
+  return <Talk token={session.token} name={session.name} onSignOut={signOut} />
 }

@@ -1,4 +1,4 @@
-import { agentIdFrom, tokensMatch } from './auth.js'
+import { agentIdFrom, findUser, parseUsers } from './auth.js'
 
 function json(res, status, body) {
   res.statusCode = status
@@ -44,17 +44,19 @@ function readBody(req) {
   })
 }
 
-function authError(token, env) {
-  if (!env.loginToken) {
+function authenticate(token, env) {
+  const users = parseUsers(env.users)
+  if (!users || users.length === 0) {
     return {
       status: 503,
       error: 'O acesso ainda não foi configurado.',
     }
   }
-  if (!tokensMatch(token, env.loginToken)) {
+  const user = findUser(users, token)
+  if (!user) {
     return { status: 401, error: 'Token inválido.' }
   }
-  return null
+  return { user }
 }
 
 async function signedUrl(env) {
@@ -120,11 +122,11 @@ export async function dispatchApi({ method, pathname, token, body }, env) {
   const path = pathname.replace(/\/+$/, '') || '/'
 
   if (path === '/api/login' && method === 'POST') {
-    const error = authError(String(body?.token ?? '').trim(), env)
-    if (error) {
-      return { status: error.status, payload: { error: error.error } }
+    const result = authenticate(String(body?.token ?? '').trim(), env)
+    if (result.status) {
+      return { status: result.status, payload: { error: result.error } }
     }
-    return { status: 200, payload: { ok: true } }
+    return { status: 200, payload: { ok: true, name: result.user.name } }
   }
 
   if (!path.startsWith('/api/')) {
@@ -135,16 +137,16 @@ export async function dispatchApi({ method, pathname, token, body }, env) {
     return { status: path.startsWith('/api/') ? 404 : 405, payload: { error: 'Não encontrado.' } }
   }
 
-  const error = authError(token, env)
-  if (error) {
-    return { status: error.status, payload: { error: error.error } }
+  const result = authenticate(token, env)
+  if (result.status) {
+    return { status: result.status, payload: { error: result.error } }
   }
   return signedUrl(env)
 }
 
 export function clientApiPlugin(env) {
   const safe = {
-    loginToken: env.loginToken?.trim() ?? '',
+    users: env.users?.trim() ?? '',
     agentId: env.agentId?.trim() ?? '',
     apiKey: env.apiKey?.trim() ?? '',
   }

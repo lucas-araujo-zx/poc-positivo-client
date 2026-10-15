@@ -284,12 +284,32 @@ button, .cta { cursor: pointer; }
   padding: 22px 28px;
 }
 
+.talk-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
 .talk-top img { height: 26px; width: auto; }
+
+.talk-user {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #b7c3ce;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
 
 .talk-actions {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .quiet,

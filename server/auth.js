@@ -2,28 +2,64 @@ import { timingSafeEqual } from 'node:crypto'
 
 const AGENT_ID = /^[a-zA-Z0-9_-]{8,128}$/
 
-function passwordSegments(raw) {
-  return String(raw ?? '')
-    .split(':')
-    .filter((segment) => segment.length > 0)
-}
-
-export function tokensMatch(given, expected) {
+function sameSecret(given, expected) {
   const left = Buffer.from(String(given ?? ''))
-  const segments = passwordSegments(expected)
-  if (!left.length || segments.length === 0) {
+  const right = Buffer.from(String(expected ?? ''))
+  if (!left.length || left.length !== right.length) {
     return false
   }
+  return timingSafeEqual(left, right)
+}
 
-  let matched = false
-  for (const segment of segments) {
-    const right = Buffer.from(segment)
-    if (left.length !== right.length) {
+export function parseUsers(raw) {
+  const text = String(raw ?? '').trim()
+  if (!text) {
+    return []
+  }
+
+  let data
+  try {
+    data = JSON.parse(text)
+  } catch {
+    return null
+  }
+  if (!Array.isArray(data)) {
+    return null
+  }
+
+  const users = []
+  const seen = new Set()
+  for (const item of data) {
+    if (!item || typeof item !== 'object') {
+      return null
+    }
+    const name = typeof item.name === 'string' ? item.name.trim() : ''
+    const password = typeof item.password === 'string' ? item.password.trim() : ''
+    if (!name || !password || seen.has(password)) {
+      return null
+    }
+    seen.add(password)
+    users.push({ name, password })
+  }
+  return users
+}
+
+export function findUser(users, given) {
+  if (!Array.isArray(users) || users.length === 0) {
+    return null
+  }
+
+  let found = null
+  for (const user of users) {
+    if (!sameSecret(given, user.password)) {
       continue
     }
-    matched = timingSafeEqual(left, right) || matched
+    if (found) {
+      return null
+    }
+    found = user
   }
-  return matched
+  return found
 }
 
 export function agentIdFrom(raw) {
