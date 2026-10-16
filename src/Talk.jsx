@@ -1,10 +1,8 @@
 import { Conversation } from '@elevenlabs/client'
 import { useEffect, useRef, useState } from 'react'
+import logo from '../positivo-logo.png'
 import { signedUrl } from './api.js'
 import { Orb } from './Orb.jsx'
-
-const LOGO =
-  'https://static.meupositivo.com.br/images/b2b/logo-positivo-empresas.png'
 
 function roleOf(message) {
   return message?.source === 'user' || message?.role === 'user' ? 'user' : 'agent'
@@ -126,7 +124,7 @@ export function Talk({ token, name, onSignOut }) {
     <div className={`talk ${mode}`}>
       <header className="talk-top">
         <div className="talk-brand">
-          <img src={LOGO} alt="Positivo" />
+          <img src={logo} alt="Positivo Tecnologia" />
           <p className="talk-user">{name}</p>
         </div>
         <div className="talk-actions">

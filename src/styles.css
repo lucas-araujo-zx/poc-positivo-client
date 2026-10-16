@@ -118,7 +118,7 @@ button, .cta { cursor: pointer; }
 }
 
 .login-top img {
-  height: 28px;
+  height: 46px;
   width: auto;
   animation: rise-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -291,7 +291,7 @@ button, .cta { cursor: pointer; }
   min-width: 0;
 }
 
-.talk-top img { height: 26px; width: auto; }
+.talk-top img { height: 40px; width: auto; }
 
 .talk-user {
   margin: 0;

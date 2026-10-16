@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
-
-const LOGO =
-  'https://static.meupositivo.com.br/images/b2b/logo-positivo-empresas.png'
+import logo from '../positivo-logo.png'
 
 export function Login({ error, loading, onSubmit }) {
   const [token, setToken] = useState('')
@@ -33,7 +31,7 @@ export function Login({ error, loading, onSubmit }) {
         Ir para o acesso
       </a>
       <header className="login-top">
-        <img src={LOGO} alt="Positivo Empresas" />
+        <img src={logo} alt="Positivo Tecnologia" />
         <p>Laboratório de agentes</p>
       </header>
       <section className="login-stage">
