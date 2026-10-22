@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import logo from '../positivo-logo.png'
+import { MicGate } from './MicGate.jsx'
 
 export function Login({ error, loading, onSubmit }) {
   const [token, setToken] = useState('')
@@ -45,6 +46,7 @@ export function Login({ error, loading, onSubmit }) {
         </div>
         <div className="login-shell">
           <form id="entrar" className="login-panel" autoComplete="off" onSubmit={handleSubmit}>
+            <MicGate />
             <div className="login-autofill-trap" aria-hidden="true">
               <input type="text" tabIndex={-1} autoComplete="username" />
             </div>

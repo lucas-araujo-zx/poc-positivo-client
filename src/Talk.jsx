@@ -2,6 +2,8 @@ import { Conversation } from '@elevenlabs/client'
 import { useEffect, useRef, useState } from 'react'
 import logo from '../positivo-logo.png'
 import { signedUrl } from './api.js'
+import { markAgentSpeaking, onIsolationMode, releaseIsolation, warmAudio } from './isolate.js'
+import { MicGate, useMic } from './MicGate.jsx'
 import { Orb } from './Orb.jsx'
 
 function roleOf(message) {
@@ -15,8 +17,11 @@ export function Talk({ token, name, onSignOut }) {
   const [messages, setMessages] = useState([])
   const [draft, setDraft] = useState('')
   const [error, setError] = useState('')
+  const [directMic, setDirectMic] = useState(false)
   const sessionRef = useRef(null)
   const listRef = useRef(null)
+  const mic = useMic()
+  const voiceReady = mic.status === 'granted'
 
   useEffect(() => {
     const list = listRef.current
@@ -25,9 +30,12 @@ export function Talk({ token, name, onSignOut }) {
     }
   }, [messages, mode, status])
 
+  useEffect(() => onIsolationMode(setDirectMic), [])
+
   useEffect(() => () => {
     sessionRef.current?.endSession?.().catch(() => {})
     sessionRef.current = null
+    releaseIsolation()
   }, [])
 
   function pushMessage(role, text) {
@@ -54,10 +62,19 @@ export function Talk({ token, name, onSignOut }) {
     } catch {
       // A sessão já pode ter caído.
     }
+    releaseIsolation()
+    setDirectMic(false)
   }
 
   async function start(nextMode, opening) {
+    if (nextMode !== 'text' && !voiceReady) {
+      return
+    }
+    if (nextMode !== 'text') {
+      warmAudio()
+    }
     setError('')
+    setDirectMic(false)
     setStatus('connecting')
     setMessages([])
     try {
@@ -73,7 +90,11 @@ export function Talk({ token, name, onSignOut }) {
           setAgentMode('listening')
           setStatus((current) => (current === 'connected' ? 'ended' : 'idle'))
         },
-        onModeChange: ({ mode: next }) => setAgentMode(next === 'speaking' ? 'speaking' : 'listening'),
+        onModeChange: ({ mode: next }) => {
+          const speaking = next === 'speaking'
+          setAgentMode(speaking ? 'speaking' : 'listening')
+          markAgentSpeaking(speaking)
+        },
         onMessage: (message) => pushMessage(roleOf(message), message?.message),
         onError: (message) => {
           const text = typeof message === 'string' ? message : 'Não foi possível manter a conversa.'
@@ -87,6 +108,8 @@ export function Talk({ token, name, onSignOut }) {
         conversation.sendUserMessage(opening)
       }
     } catch (reason) {
+      releaseIsolation()
+      setDirectMic(false)
       setStatus('idle')
       setError(reason instanceof Error ? reason.message : 'Não foi possível abrir a conversa.')
     }
@@ -107,6 +130,10 @@ export function Talk({ token, name, onSignOut }) {
     event.preventDefault()
     const text = draft.trim()
     if (!text || status === 'connecting') {
+      return
+    }
+    if (mode === 'voice' && !voiceReady && !sessionRef.current) {
+      setError('Autorize o microfone para falar. Para escrever agora, use Conversar por texto.')
       return
     }
     setDraft('')
@@ -138,13 +165,15 @@ export function Talk({ token, name, onSignOut }) {
       </header>
 
       <main className="talk-stage">
+        <MicGate id="mic-gate-hint" variant="dark" />
         <div className={`orb-slot ${agentMode}`}>
           <Orb speaking={agentMode === 'speaking'} listening={live} />
           {mode === 'voice' ? (
             <button
               type="button"
-              className={`call-pill ${live ? 'is-live' : ''}`}
-              disabled={status === 'connecting'}
+              className={`call-pill ${live ? 'is-live' : ''} ${voiceReady ? '' : 'is-locked'}`}
+              disabled={status === 'connecting' || !voiceReady}
+              aria-describedby={!voiceReady && mic.status !== 'checking' ? 'mic-gate-hint' : undefined}
               onClick={() => (live ? stop() : start('voice'))}
             >
               <i aria-hidden="true">
@@ -171,6 +200,9 @@ export function Talk({ token, name, onSignOut }) {
         {mode === 'voice' && live ? (
           <p className="talk-status">{agentMode === 'speaking' ? 'Falando' : 'Ouvindo'}</p>
         ) : null}
+        {mode === 'voice' && live && directMic ? (
+          <p className="talk-note">A voz está passando direto. O isolador não entrou nesta chamada.</p>
+        ) : null}
 
         <section className="chat" aria-live="polite">
           <ol className="messages" ref={listRef}>
@@ -179,9 +211,11 @@ export function Talk({ token, name, onSignOut }) {
                 <p>
                   {status === 'connecting'
                     ? 'Conectando...'
-                    : mode === 'voice'
-                      ? 'Fale pelo microfone ou escreva aqui.'
-                      : 'Escreva para o agente.'}
+                    : mode === 'voice' && !voiceReady
+                      ? 'Autorize o microfone para falar com a MIA. O texto continua disponível.'
+                      : mode === 'voice'
+                        ? 'Fale pelo microfone ou escreva aqui.'
+                        : 'Escreva para o agente.'}
                 </p>
               </li>
             ) : (

@@ -409,6 +409,59 @@ button, .cta { cursor: pointer; }
 
 .call-pill.is-live i { background: #fff; color: #111; }
 .call-pill:disabled { cursor: wait; opacity: 0.75; }
+.call-pill.is-locked:disabled { cursor: not-allowed; opacity: 0.45; }
+
+.mic-gate {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: min(760px, 100%);
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid #b7c6d6;
+  border-radius: 16px;
+  background: #fff;
+  color: var(--ink);
+  text-align: left;
+}
+
+.mic-gate i {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+}
+
+.mic-gate span { display: grid; gap: 3px; min-width: 0; }
+
+.mic-gate strong {
+  font-family: Montserrat, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mic-gate small {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.mic-gate:hover { border-color: var(--blue); }
+.mic-gate:disabled { cursor: not-allowed; opacity: 0.8; }
+.mic-gate.is-pending:disabled { cursor: wait; }
+
+.mic-gate.dark {
+  border-color: rgba(156, 230, 230, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.mic-gate.dark small { color: #c5ced6; }
+.mic-gate.dark:hover { border-color: var(--cyan); }
 
 .talk-status,
 .talk-caption,
@@ -424,6 +477,14 @@ button, .cta { cursor: pointer; }
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+}
+
+.talk-note {
+  max-width: 42ch;
+  margin: 0;
+  color: #c5ced6;
+  font-size: 14px;
+  text-align: center;
 }
 
 .talk-caption {

@@ -4,12 +4,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/write-vercel-output.mjs",
+    "models": "alkove models public/alkove focus cue && cp node_modules/alkove/LICENSE node_modules/alkove/NOTICE public/alkove/",
+    "build": "npm run models && vite build && node scripts/write-vercel-output.mjs",
     "preview": "vite preview",
-    "test": "node --test server/*.test.js"
+    "test": "node --test server/*.test.js src/isolate.test.js"
   },
   "dependencies": {
     "@elevenlabs/client": "^0.12.0",
+    "alkove": "^0.3.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
